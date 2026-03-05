@@ -13,11 +13,10 @@ Run in Microsoft Fabric SQL endpoint (Warehouse or SQL endpoint you are using fo
 ## Install / rebuild order
 Run these SQL files in order:
 
-1. `sql/01_schema_tables.sql`
-2. `sql/02_views.sql`
-3. `sql/03_procedures.sql`
-4. `sql/04_demo_seed.sql`
-5. `sql/05_ui_views_procs.sql`
+1. `01_schema_tables.sql` — create schemas and tables
+2. `02_views.sql` — create required views
+3. `03_procedures.sql` — create stored procedures used by Power Automate
+4. `04_ui_contract.sql` — create any UI-specific views/procs required by the app/flows
 
 ## Quick demo flow
 
@@ -46,5 +45,6 @@ EXEC admin.usp_MarkDispatchRunComplete
 SELECT *
 FROM admin.v_rerun_candidates_failed_7d
 ORDER BY finishedOn DESC;
+
 
 EXEC admin.usp_DispatchRetries_Failed7d_TopN_Log @topN = 5;
