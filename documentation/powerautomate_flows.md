@@ -67,3 +67,31 @@ Using Power Automate as the write layer provides several benefits:
 - allows validation before execution
 - simplifies future integration with additional automation
 - improves maintainability of the governance framework
+
+## YAML Import Flow
+
+A new Power Automate flow was implemented to support YAML import functionality.
+
+### Purpose
+This flow allows users to create new ingestion configurations directly from a YAML definition provided through the application UI.
+
+### Process
+The flow performs the following steps:
+
+1. Receives YAML input from the Power Apps interface  
+2. Parses key sections of the YAML structure, including:
+   - pipeline
+   - source
+   - destination
+   - extract
+   - settings  
+3. Maps extracted values to the corresponding governance table fields  
+4. Executes an insert operation to create a new ingestion configuration  
+
+### Behaviour
+- The flow is designed to create new configurations only  
+- Existing configurations are not modified  
+- Basic validation is applied to ensure required fields are present  
+
+### Role in the System
+This flow extends the governance layer by enabling configuration portability and faster onboarding of new ingestion definitions, supporting a more scalable and flexible architecture.
