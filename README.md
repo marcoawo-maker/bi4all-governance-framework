@@ -80,3 +80,49 @@ Power Automate
 SQL Governance Tables
      ↓
 Ingestion Pipelines
+
+
+## Recent Enhancements
+
+### Ingestion Execution Layer
+A manual ingestion pipeline was introduced to validate that governed configurations can be executed in practice.
+
+This pipeline ingests CSV files into Bronze tables in the Lakehouse, demonstrating the transition from configuration (governance) to execution.
+
+---
+
+### Ingestion Monitoring
+A monitoring layer was added to provide visibility over ingestion execution.
+
+This includes KPIs such as:
+- Total Executions
+- Successful Executions
+- Failed Executions
+- Success Rate
+- Last Execution Time
+- Average Duration
+
+Execution data is stored in a dedicated Lakehouse table, separating operational data from governance metadata.
+
+---
+
+### YAML Import
+In addition to YAML export, the system now supports YAML import.
+
+This allows ingestion configurations to be created from structured YAML definitions via Power Automate, enabling:
+- configuration portability
+- faster onboarding
+- alignment with version control practices
+
+---
+
+### Updated Architecture
+
+The architecture now extends beyond governance and includes execution and monitoring:
+
+Power Apps → Power Automate → SQL Governance Tables → Ingestion Pipeline → Lakehouse (Bronze + Execution Logs)
+
+This reflects a more complete data platform design, covering:
+- configuration
+- execution
+- monitoring
