@@ -107,3 +107,46 @@ The Power Apps interface was designed following three key principles:
 3. Operational autonomy
 
 Users can perform common governance tasks while deeper technical modifications remain restricted to technical staff.
+
+## Recent Updates (Search & Ingestion Monitoring)
+
+### Search Functionality
+The Configuration Viewer screen was enhanced with a search capability.
+
+Users can now filter ingestion configurations dynamically based on key fields such as:
+- model
+- destination object pattern
+- source object name
+
+This improves usability by allowing faster navigation across a large number of configurations.
+
+The current implementation is case-sensitive and intended for controlled filtering during exploration.
+
+---
+
+### Ingestion Monitoring KPIs
+A new KPI section was introduced to provide visibility over ingestion execution.
+
+This complements the governance-focused KPIs by introducing an operational perspective.
+
+The new indicators include:
+- Total Executions
+- Successful Executions
+- Failed Executions
+- Success Rate
+- Last Execution Time
+- Average Duration
+
+These KPIs are powered by a dedicated execution log stored in the Lakehouse, representing the execution layer of the system.
+
+At the current stage, execution records are simulated to validate KPI behaviour and demonstrate how monitoring will function once ingestion processes are automated.
+
+---
+
+### Architectural Alignment
+With these additions, the application now clearly separates:
+
+- Governance layer → configuration definition and control  
+- Execution layer → ingestion runs and operational monitoring  
+
+This separation ensures a scalable and maintainable design, aligning with modern data platform architecture practices.
