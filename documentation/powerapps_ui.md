@@ -10,13 +10,14 @@ The application focuses on simplicity, controlled edits, and operational autonom
 
 ## Application Structure
 
-The application contains three main functional areas:
+The application contains four main functional areas:
 
 1. Configuration Viewer
 2. Configuration Creation
-3. Governance KPI Dashboard
+3. KPI Dashboard
+4. YAML Management
 
-Each component serves a specific governance purpose.
+Each component serves a specific role within the governance and execution framework.
 
 ---
 
@@ -26,11 +27,20 @@ The main screen of the application allows users to browse and review existing in
 
 Features include:
 
-- Model filtering
-- Configuration list display
-- Status visibility (Active / Blocked)
+* Model filtering
+* Configuration list display
+* Status visibility (Active / Blocked)
+* Sorting by last modified date
 
-Users can quickly inspect configuration properties without needing database access.
+### Search Functionality
+
+The viewer includes dynamic search capabilities based on:
+
+* model
+* destination object pattern
+* source object name
+
+The search is currently case-sensitive, enabling controlled filtering across configurations.
 
 ---
 
@@ -38,44 +48,47 @@ Users can quickly inspect configuration properties without needing database acce
 
 Users are allowed to modify operational status fields.
 
-Two primary controls are available:
-
 ### flagActive
 
 Controls whether a configuration is currently active.
 
-Values:
+* `1` → Active
+* `0` → Inactive
 
-- `1` → Active
-- `0` → Inactive
-
-This allows users to temporarily disable ingestion processes.
+Inactive configurations remain stored but are excluded from execution.
 
 ---
 
-### flagBlocked
+### flagBlock
 
 Used to block a configuration when operational issues occur.
 
-Blocking allows administrators to prevent ingestion execution without removing configuration metadata.
+Blocking prevents execution without removing configuration metadata.
 
 ---
 
 ## Configuration Creation Screen
 
-Users can create new ingestion configurations through a simplified form.
+Users can create new ingestion configurations through a controlled form.
 
 To maintain governance consistency, several rules are enforced:
 
-- The **model** must be selected from an existing list.
-- The **destinationObjectPattern** must follow a predefined naming convention.
+* The **model** must be selected from an existing list
+* The **destinationObjectPattern** must follow a predefined naming convention
 
 Example:
 
 brz_<Model>_<Suffix>
 
+* The suffix must be alphanumeric and limited in length
 
-The suffix must be alphanumeric and limited in length.
+### Real-Time Preview
+
+The interface provides a preview of:
+
+* ingestion name
+* target table
+* destination folder
 
 System fields such as `configId` and timestamps are automatically generated.
 
@@ -83,18 +96,60 @@ System fields such as `configId` and timestamps are automatically generated.
 
 ## KPI Dashboard
 
-The application includes a minimalistic KPI screen designed to provide governance visibility.
+The application includes a KPI screen combining governance and execution monitoring.
 
-Displayed indicators include:
+### Governance KPIs
 
-- Total Configurations
-- Active Configurations
-- Inactive Configurations
-- Blocked Configurations
-- Extract Type Distribution (Full vs Incremental)
-- Configurations Created in the Last 7 Days
+* Total Configurations
+* Active Configurations
+* Inactive Configurations
+* Blocked Configurations
+* Extract Type Distribution (Full vs Incremental)
+* Configurations Created in the Last 7 Days
 
-The goal is to provide a quick overview of ingestion governance health.
+---
+
+### Execution KPIs
+
+* Total Executions
+* Successful Executions
+* Failed Executions
+* Success Rate
+* Last Execution Time
+* Average Duration
+* Rows Ingested
+* Skipped Executions
+
+These KPIs are powered by ingestion execution logs stored in the Lakehouse.
+
+---
+
+## YAML Management
+
+The application supports YAML-based configuration handling.
+
+### Export
+
+Users can select a configuration and generate its YAML representation.
+
+This enables:
+
+* portability
+* version control integration
+* reproducibility
+
+---
+
+### Import
+
+Users can paste YAML definitions to create new configurations.
+
+Validation ensures:
+
+* no duplicate configurations
+* compliance with governance rules
+
+YAML import creates new configurations and does not modify existing ones.
 
 ---
 
@@ -106,47 +161,15 @@ The Power Apps interface was designed following three key principles:
 2. Controlled edits
 3. Operational autonomy
 
-Users can perform common governance tasks while deeper technical modifications remain restricted to technical staff.
-
-## Recent Updates (Search & Ingestion Monitoring)
-
-### Search Functionality
-The Configuration Viewer screen was enhanced with a search capability.
-
-Users can now filter ingestion configurations dynamically based on key fields such as:
-- model
-- destination object pattern
-- source object name
-
-This improves usability by allowing faster navigation across a large number of configurations.
-
-The current implementation is case-sensitive and intended for controlled filtering during exploration.
+Users can perform governance tasks while technical complexity remains restricted.
 
 ---
 
-### Ingestion Monitoring KPIs
-A new KPI section was introduced to provide visibility over ingestion execution.
+## Architectural Alignment
 
-This complements the governance-focused KPIs by introducing an operational perspective.
+The application separates two core layers:
 
-The new indicators include:
-- Total Executions
-- Successful Executions
-- Failed Executions
-- Success Rate
-- Last Execution Time
-- Average Duration
+* Governance layer → configuration definition and control
+* Execution layer → ingestion runs and operational monitoring
 
-These KPIs are powered by a dedicated execution log stored in the Lakehouse, representing the execution layer of the system.
-
-At the current stage, execution records are simulated to validate KPI behaviour and demonstrate how monitoring will function once ingestion processes are automated.
-
----
-
-### Architectural Alignment
-With these additions, the application now clearly separates:
-
-- Governance layer → configuration definition and control  
-- Execution layer → ingestion runs and operational monitoring  
-
-This separation ensures a scalable and maintainable design, aligning with modern data platform architecture practices.
+This separation ensures scalability, maintainability, and alignment with modern data platform design.
