@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # BI4ALL Governance Baseline (Fabric-safe)
 
 This repo contains a reproducible SQL baseline for a metadata-driven orchestration framework:
@@ -100,4 +99,3 @@ ORDER BY finishedOn DESC;
 
 
 EXEC admin.usp_DispatchRetries_Failed7d_TopN_Log @topN = 5;
->>>>>>> 88bbf1aad7e883f8c19e0d3796f34cc884d3698b
