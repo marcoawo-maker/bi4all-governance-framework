@@ -1,97 +1,33 @@
-# BI4All Project — Architecture Overview
+# BI4ALL Project — Architecture Overview
 
 ## Purpose
+This repository documents and version-controls a governance-driven ingestion prototype built for the BI4ALL thesis project.
 
-This repository contains a governance-driven prototype that supports the creation and controlled management of ingestion configurations through a lightweight user interface (Power Apps) backed by SQL and Power Automate.
+The objective is to let operational users create and manage ingestion configurations through a controlled interface, while preserving technical governance through SQL and Power Automate.
 
-The objective is to enable operational autonomy for basic users (create + activate/deactivate + block/unblock) while keeping technical configuration changes restricted.
+## High-level architecture
+**Power Apps (UI)** → **Power Automate (write actions)** → **SQL governance layer** → **Fabric execution layer / Lakehouse monitoring**
 
----
+## Core components
+### Governance layer
+Primary table: `admin.copyDataConfig`
 
-## High-level Architecture
+This table stores the metadata that defines ingestion behaviour, including source, destination, extract logic, activation/blocking flags, and audit fields.
 
-**Power Apps (UI)** → **Power Automate (write actions)** → **SQL (governance tables + stored procedures)**
+### SQL procedures
+Stored procedures are used for controlled writes. The current core procedures include:
+- `admin.usp_CreateCopyDataConfig_Basic`
+- `admin.usp_SetFlagActive`
+- `admin.usp_SetFlagBlock`
 
-- **Power Apps** provides screens to view, create, and manage ingestion configurations.
-- **Power Automate** executes controlled write operations to SQL (instead of direct write from the app).
-- **SQL** stores governance configuration and enforces consistent structure via stored procedures.
+### Power Automate
+Power Automate acts as the write layer between the app and SQL, and also supports YAML export/import.
 
----
+### Power Apps
+The app provides configuration viewing, controlled status changes, creation of new configurations, governance KPIs, and YAML-related actions.
 
-## Core Components
-
-### 1) Governance Table (SQL)
-
-Primary table:
-
-- `admin.copyDataConfig`
-
-Purpose:
-
-- Store the ingestion configuration metadata that drives the ingestion framework.
-
-Examples of stored values:
-
-- model and source definitions
-- destination naming patterns
-- extract type (Full vs Incremental)
-- activation and blocking flags
-- system-generated identifiers and timestamps
-
----
-
-### 2) Stored Procedures (SQL)
-
-The database logic is encapsulated in stored procedures so that write operations are consistent and auditable.
-
-Implemented procedures include:
-
-- **Toggle procedure**
-  - Updates status fields such as `flagActive` and/or `flagBlocked` for an existing configuration.
-- **Create procedure**
-  - Creates a new configuration row with controlled defaults and system-generated values.
-
----
-
-### 3) Power Automate Flows
-
-Power Automate is used as the write layer between Power Apps and SQL.
-
-Implemented flows include:
-
-- **Toggle configuration flow**
-  - Receives the config identifier and the target status values from the app.
-  - Calls the toggle stored procedure in SQL.
-- **Create configuration flow**
-  - Receives validated user inputs from the create screen.
-  - Calls the create stored procedure in SQL.
-
----
-
-### 4) Power Apps Application
-
-The Power Apps UI provides:
-
-- a configuration list/consultation experience (with filtering)
-- controlled editing of specific fields (status toggles)
-- a create experience with validation
-- a minimalistic KPI screen for governance visibility
-
-The UI is designed to expose all relevant fields for viewing, while restricting edits to approved fields only.
-
----
-
-## Governance Rules Implemented
-
-### Create rules (basic users)
-
-- Users can create new ingestion configurations **only under existing models** (model selected from a dropdown, not free text).
-- `destinationObjectPattern` follows a controlled naming pattern:
-  - `brz_<Model>_` + user-provided **alphanumeric suffix** (max ~15 chars).
-- `configId` is system-generated.
-- Advanced/technical settings remain restricted.
-
----
+### Execution and monitoring
+Execution results are logged in the Lakehouse through `dbo.ingestion_execution_log`, which supports operational KPIs such as total executions, success/failure counts, duration, and last execution time.
 
 ## Notes
 
