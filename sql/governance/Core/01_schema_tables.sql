@@ -1,7 +1,8 @@
 /* =====================================================================================
    BI4ALL Governance Baseline — Fabric-safe (DDL only)
-   Creates schemas + tables (idempotent). No views. No procs. No demo data.
-   Restored full version, with configGuid added to admin.copyDataConfig.
+   Creates schemas + tables (idempotent). No views. No procedures. No demo data.
+   Updated to preserve the current governance model used by the Power Apps / Power Automate
+   prototype, while keeping the broader baseline objects required by the repo.
    ===================================================================================== */
 
 SET NOCOUNT ON;
@@ -10,6 +11,7 @@ SET NOCOUNT ON;
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'admin') EXEC('CREATE SCHEMA admin');
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'log')   EXEC('CREATE SCHEMA log');
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'temp')  EXEC('CREATE SCHEMA temp');
+GO
 
 -- admin.copyDataConfig
 IF OBJECT_ID('admin.copyDataConfig','U') IS NULL
@@ -29,19 +31,20 @@ BEGIN
         destinationDirectoryPattern  VARCHAR(2048)    NOT NULL,
         destinationObjectType        VARCHAR(256)     NOT NULL,
         extractType                  VARCHAR(64)      NOT NULL,
-        deltaStartDate               DATETIME2(2)     NULL,
-        deltaEndDate                 DATETIME2(2)     NULL,
+        deltaStartDate               DATETIME2        NULL,
+        deltaEndDate                 DATETIME2        NULL,
         deltaDateColumn              VARCHAR(64)      NULL,
         deltaFilterCondition         VARCHAR(2048)    NULL,
-        flagBlock                    BIT              NOT NULL,
+        flagBlock                    BIT              NULL,
         blockSize                    INT              NULL,
         blockColumn                  VARCHAR(64)      NULL,
-        flagActive                   BIT              NOT NULL,
-        createDate                   DATETIME2(2)     NOT NULL,
-        lastModifiedDate             DATETIME2(2)     NULL,
+        flagActive                   BIT              NULL,
+        createDate                   DATETIME2        NULL,
+        lastModifiedDate             DATETIME2        NULL,
         configGuid                   UNIQUEIDENTIFIER NULL
     );
 END;
+GO
 
 -- temp.copyDataConfig (mirror)
 IF OBJECT_ID('temp.copyDataConfig','U') IS NULL
@@ -61,18 +64,20 @@ BEGIN
         destinationDirectoryPattern  VARCHAR(2048)    NOT NULL,
         destinationObjectType        VARCHAR(256)     NOT NULL,
         extractType                  VARCHAR(64)      NOT NULL,
-        deltaStartDate               DATETIME2(2)     NULL,
-        deltaEndDate                 DATETIME2(2)     NULL,
+        deltaStartDate               DATETIME2        NULL,
+        deltaEndDate                 DATETIME2        NULL,
         deltaDateColumn              VARCHAR(64)      NULL,
         deltaFilterCondition         VARCHAR(2048)    NULL,
-        flagBlock                    BIT              NOT NULL,
+        flagBlock                    BIT              NULL,
         blockSize                    INT              NULL,
         blockColumn                  VARCHAR(64)      NULL,
-        flagActive                   BIT              NOT NULL,
-        createDate                   DATETIME2(2)     NOT NULL,
-        lastModifiedDate             DATETIME2(2)     NULL
+        flagActive                   BIT              NULL,
+        createDate                   DATETIME2        NULL,
+        lastModifiedDate             DATETIME2        NULL,
+        configGuid                   UNIQUEIDENTIFIER NULL
     );
 END;
+GO
 
 -- admin.processDatesConfig
 IF OBJECT_ID('admin.processDatesConfig','U') IS NULL
@@ -89,6 +94,7 @@ BEGIN
         date             DATETIME2(0)  NULL
     );
 END;
+GO
 
 -- admin.inferredMembersConfig
 IF OBJECT_ID('admin.inferredMembersConfig','U') IS NULL
@@ -99,6 +105,7 @@ BEGIN
         skValue     VARCHAR(2)  NOT NULL
     );
 END;
+GO
 
 -- admin.silverGoldConfig
 IF OBJECT_ID('admin.silverGoldConfig','U') IS NULL
@@ -120,6 +127,7 @@ BEGIN
         flagActive               BIT           NOT NULL
     );
 END;
+GO
 
 -- admin.silverGoldDependency
 IF OBJECT_ID('admin.silverGoldDependency','U') IS NULL
@@ -132,6 +140,7 @@ BEGIN
         SystemDateUpdate     DATETIME2(0) NOT NULL
     );
 END;
+GO
 
 -- admin.processDependencyConfig
 IF OBJECT_ID('admin.processDependencyConfig','U') IS NULL
@@ -146,6 +155,7 @@ BEGIN
         createdBy     VARCHAR(100) NULL
     );
 END;
+GO
 
 -- log.copyDataLog
 IF OBJECT_ID('log.copyDataLog','U') IS NULL
@@ -163,8 +173,9 @@ BEGIN
         duration           INT           NULL
     );
 END;
+GO
 
--- temp.dispatchSelection (used to make Top-N deterministic in Fabric)
+-- temp.dispatchSelection
 IF OBJECT_ID('temp.dispatchSelection','U') IS NULL
 BEGIN
     CREATE TABLE temp.dispatchSelection
@@ -176,3 +187,4 @@ BEGIN
         createdOn   DATETIME2(3) NOT NULL
     );
 END;
+GO
