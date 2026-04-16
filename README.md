@@ -120,7 +120,7 @@ This allows ingestion configurations to be created from structured YAML definiti
 
 The architecture now extends beyond governance and includes execution and monitoring:
 
-Power Apps → Power Automate → SQL Governance Tables → Ingestion Pipeline → Lakehouse (Bronze + Execution Logs)
+Power Apps → Power Automate → SQL Governance → Ingestion Pipeline → Lakehouse → Monitoring
 
 This reflects a more complete data platform design, covering:
 - configuration
