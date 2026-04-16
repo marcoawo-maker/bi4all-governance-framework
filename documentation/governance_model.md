@@ -1,101 +1,40 @@
 # Governance Model
 
 ## Purpose
+The governance model defines how ingestion configurations can be created and managed while maintaining system integrity.
 
-The governance model defines how ingestion configurations can be created and managed while maintaining system integrity and preventing uncontrolled changes to technical parameters.
+## Core principles
+1. Controlled autonomy
+2. Separation of operational and technical responsibilities
+3. Traceable configuration management
 
-The goal is to balance **user autonomy** with **technical control**.
-
----
-
-## Governance Principles
-
-The governance design follows three main principles:
-
-1. **Controlled autonomy**
-2. **Separation of technical and operational responsibilities**
-3. **Traceable configuration management**
-
-Users should be able to perform operational tasks without requiring database access, while deeper technical changes remain restricted.
-
----
-
-## User Capabilities
-
-Basic users are allowed to perform the following actions through the Power Apps interface:
-
+## Allowed user actions
+Through the app, basic users can:
 - View ingestion configurations
 - Create new ingestion configurations
 - Activate or deactivate configurations
 - Block or unblock configurations
 
-These actions allow users to manage ingestion processes operationally without requiring technical intervention.
-
----
-
-## Restricted Actions
-
-Certain actions are intentionally restricted to technical staff.
-
-These include:
-
-- Modification of advanced configuration parameters
-- Structural changes to ingestion models
+## Restricted actions
+Restricted to technical staff:
+- Structural model changes
+- Direct SQL manipulation
 - Changes to system-generated fields
-- Direct database manipulation
+- Modifications to advanced technical parameters outside the approved flow
 
-These restrictions prevent accidental misconfiguration of ingestion pipelines.
+## Creation rules
+- Model selected from an existing list
+- Destination object naming follows the governance convention
+- `configId` is system-generated
+- Timestamps and related system fields are generated automatically
 
----
-
-## Configuration Creation Rules
-
-When creating a new configuration, the following rules apply:
-
-- The **model** must be selected from an existing list (no free-text creation).
-- The **destinationObjectPattern** must follow the defined naming convention:
-
-brz_<Model>_<Suffix>
-
-
-- The suffix must be **alphanumeric** and limited to approximately **15 characters**.
-- The **configId** is generated automatically by the system.
-- System fields such as timestamps are automatically populated.
-
----
-
-## Status Control
-
-Two main governance flags are used to control ingestion behavior:
-
-### flagActive
-
-Determines whether the ingestion configuration is active.
-
-Values:
-
+## Operational flags
+### `flagActive`
 - `1` = active
 - `0` = inactive
 
----
+### `flagBlock`
+Used to temporarily block a configuration without deleting it.
 
-### flagBlocked
-
-Allows temporary blocking of configurations without deleting them.
-
-This enables operational control when issues occur with a data source or ingestion process.
-
----
-
-## Architecture Enforcement
-
-All write operations follow this path:
-
-Power Apps → Power Automate → SQL Stored Procedures
-
-
-This architecture ensures that:
-
-- users cannot directly manipulate SQL
-- all changes follow controlled procedures
-- governance rules are consistently applied
+## Enforcement path
+**Power Apps → Power Automate → SQL stored procedures**
