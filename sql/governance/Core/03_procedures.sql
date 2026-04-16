@@ -1,8 +1,8 @@
 /* =====================================================================================
-   BI4ALL Governance Baseline — Fabric-safe (PROCS)
-   Run after 01_schema_tables.sql and 02_views.sql
-   Restored full version, including original governance procedures
-   plus current Power Apps / Power Automate procedures.
+   BI4ALL Governance Baseline — Fabric-safe (PROCEDURES)
+   Run after 01_schema_tables.sql and 02_views.sql.
+   This file keeps the broader governance / dispatch procedures while aligning the core
+   Power Apps / Power Automate procedures with the current implementation captured from Fabric.
    ===================================================================================== */
 
 SET NOCOUNT ON;
@@ -76,162 +76,72 @@ END;
 GO
 
 /* -----------------------------------------------------------------------------
-   Create (UI / Power Apps)
+   Create (UI / Power Apps) — current Fabric implementation
 ----------------------------------------------------------------------------- */
 CREATE OR ALTER PROCEDURE admin.usp_CreateCopyDataConfig_Basic
 (
-    @model             VARCHAR(256),
-    @destinationSuffix VARCHAR(15),
-    @extractType       VARCHAR(64),
-    @sourceObjectName  VARCHAR(256),
-    @configGuid        UNIQUEIDENTIFIER,
-    @flagActive        BIT = 1
+    @model varchar(256),
+    @suffix varchar(15),
+    @extractType varchar(64),
+    @sourceObjectName varchar(256),
+    @configGuid uniqueidentifier,
+    @flagActive bit
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF (@model IS NULL OR LTRIM(RTRIM(@model)) = '')
-    BEGIN
-        SELECT 'MODEL_REQUIRED' AS result, NULL AS configId;
-        RETURN;
-    END;
+    DECLARE @destinationObjectPattern varchar(64) =
+        'brz_' + @model;
 
-    IF (@sourceObjectName IS NULL OR LTRIM(RTRIM(@sourceObjectName)) = '')
-    BEGIN
-        SELECT 'SOURCEOBJECT_REQUIRED' AS result, NULL AS configId;
-        RETURN;
-    END;
+    DECLARE @destinationDirectoryPattern varchar(2048) =
+        '/brz/' + @model + '/';
 
-    IF (@destinationSuffix IS NULL OR LEN(@destinationSuffix) < 1 OR LEN(@destinationSuffix) > 15)
-    BEGIN
-        SELECT 'SUFFIX_INVALID_LENGTH' AS result, NULL AS configId;
-        RETURN;
-    END;
+    DECLARE @newConfigId int;
 
-    IF (@destinationSuffix LIKE '%[^A-Za-z0-9]%')
-    BEGIN
-        SELECT 'SUFFIX_NOT_ALPHANUMERIC' AS result, NULL AS configId;
-        RETURN;
-    END;
+    SELECT @newConfigId = ISNULL(MAX(configId), 0) + 1
+    FROM admin.copyDataConfig;
 
-    DECLARE @extractNorm VARCHAR(64) = UPPER(LTRIM(RTRIM(@extractType)));
-    IF (@extractNorm NOT IN ('FULL','INCREMENTAL'))
-    BEGIN
-        SELECT 'EXTRACTTYPE_INVALID' AS result, NULL AS configId;
-        RETURN;
-    END;
-
-    DECLARE @destinationObjectPattern VARCHAR(64) =
-        CONCAT('brz_', @model, '_', @destinationSuffix);
-
-    IF (LEN(@destinationObjectPattern) > 64)
-    BEGIN
-        SELECT 'DESTPATTERN_TOO_LONG' AS result, NULL AS configId;
-        RETURN;
-    END;
-
-    DECLARE @destinationDirectoryPattern VARCHAR(2048) =
-        CONCAT('/brz/', @model, '/');
-
-    IF EXISTS (
-        SELECT 1
-        FROM admin.copyDataConfig
-        WHERE model = @model
-          AND sourceObjectName = @sourceObjectName
-          AND destinationObjectPattern = @destinationObjectPattern
+    INSERT INTO admin.copyDataConfig
+    (
+        configId,
+        model,
+        sourceSystemName,
+        sourceSystemType,
+        sourceObjectName,
+        destinationSystemName,
+        destinationSystemType,
+        destinationObjectPattern,
+        destinationDirectoryPattern,
+        destinationObjectType,
+        extractType,
+        flagBlock,
+        flagActive,
+        createDate,
+        lastModifiedDate,
+        configGuid
     )
-    BEGIN
-        SELECT 'DUPLICATE_NOT_CREATED' AS result, NULL AS configId;
-        RETURN;
-    END;
+    VALUES
+    (
+        @newConfigId,
+        @model,
+        'Default',
+        'SQL',
+        @sourceObjectName,
+        'Fabric',
+        'Warehouse',
+        @destinationObjectPattern,
+        @destinationDirectoryPattern,
+        'Table',
+        @extractType,
+        0,
+        @flagActive,
+        SYSDATETIME(),
+        NULL,
+        @configGuid
+    );
 
-    DECLARE @newConfigId INT;
-
-    BEGIN TRY
-        BEGIN TRAN;
-
-        BEGIN TRY
-            DECLARE @lockResult INT = 0;
-            EXEC @lockResult = sp_getapplock
-                @Resource = 'admin.copyDataConfig.configId',
-                @LockMode = 'Exclusive',
-                @LockTimeout = 10000,
-                @DbPrincipal = 'public';
-        END TRY
-        BEGIN CATCH
-            -- Ignore lock errors in demo / Fabric contexts where unsupported
-        END CATCH;
-
-        SELECT @newConfigId = ISNULL(MAX(configId), 0) + 1
-        FROM admin.copyDataConfig;
-
-        INSERT INTO admin.copyDataConfig
-        (
-            configId,
-            model,
-            sourceSystemName,
-            sourceSystemType,
-            sourceLocationName,
-            sourceObjectName,
-            sourceSelectColumns,
-            sourceKeyColumns,
-            destinationSystemName,
-            destinationSystemType,
-            destinationObjectPattern,
-            destinationDirectoryPattern,
-            destinationObjectType,
-            extractType,
-            deltaStartDate,
-            deltaEndDate,
-            deltaDateColumn,
-            deltaFilterCondition,
-            flagBlock,
-            blockSize,
-            blockColumn,
-            flagActive,
-            createDate,
-            lastModifiedDate,
-            configGuid
-        )
-        VALUES
-        (
-            @newConfigId,
-            @model,
-            'Default',
-            'SQL',
-            NULL,
-            @sourceObjectName,
-            NULL,
-            NULL,
-            'Fabric',
-            'Warehouse',
-            @destinationObjectPattern,
-            @destinationDirectoryPattern,
-            'Table',
-            @extractNorm,
-            NULL, NULL, NULL, NULL,
-            0,
-            NULL, NULL,
-            COALESCE(@flagActive, 1),
-            SYSDATETIME(),
-            NULL,
-            @configGuid
-        );
-
-        COMMIT TRAN;
-
-        SELECT
-            'CREATED' AS result,
-            @newConfigId AS configId,
-            @configGuid AS configGuid,
-            @destinationObjectPattern AS destinationObjectPattern,
-            @destinationDirectoryPattern AS destinationDirectoryPattern;
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRAN;
-        THROW;
-    END CATCH
+    SELECT @configGuid AS configGuid;
 END;
 GO
 
@@ -261,14 +171,12 @@ END;
 GO
 
 /* -----------------------------------------------------------------------------
-   Set active flag (UI explicit setter)
+   Set active flag (current Fabric implementation)
 ----------------------------------------------------------------------------- */
 CREATE OR ALTER PROCEDURE admin.usp_SetFlagActive
-(
     @model NVARCHAR(128),
     @destinationObjectPattern NVARCHAR(256),
     @newValue BIT
-)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -280,27 +188,17 @@ BEGIN
     WHERE model = @model
       AND destinationObjectPattern = @destinationObjectPattern;
 
-    DECLARE @rc INT = @@ROWCOUNT;
-
-    SELECT
-      CASE
-        WHEN @rc = 0 THEN 'NOT_FOUND'
-        WHEN @rc = 1 THEN 'UPDATED'
-        ELSE 'WARNING_MULTIPLE_ROWS_UPDATED'
-      END AS result,
-      @rc AS rows_updated;
+    SELECT @@ROWCOUNT AS rows_updated;
 END;
 GO
 
 /* -----------------------------------------------------------------------------
-   Set block flag (UI explicit setter)
+   Set block flag (current Fabric implementation)
 ----------------------------------------------------------------------------- */
 CREATE OR ALTER PROCEDURE admin.usp_SetFlagBlock
-(
     @model NVARCHAR(128),
     @destinationObjectPattern NVARCHAR(256),
     @newValue BIT
-)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -312,15 +210,7 @@ BEGIN
     WHERE model = @model
       AND destinationObjectPattern = @destinationObjectPattern;
 
-    DECLARE @rc INT = @@ROWCOUNT;
-
-    SELECT
-      CASE
-        WHEN @rc = 0 THEN 'NOT_FOUND'
-        WHEN @rc = 1 THEN 'UPDATED'
-        ELSE 'WARNING_MULTIPLE_ROWS_UPDATED'
-      END AS result,
-      @rc AS rows_updated;
+    SELECT @@ROWCOUNT AS rows_updated;
 END;
 GO
 
@@ -539,3 +429,4 @@ BEGIN
     SELECT 'DISPATCHED' AS result, @runId AS runId, @@ROWCOUNT AS rows_dispatched;
 END;
 GO
+
